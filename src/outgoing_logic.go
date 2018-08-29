@@ -43,6 +43,10 @@ type ReceiveMask struct {
 	bits uint32
 }
 
+func NewReceiveMask(bits uint32) ReceiveMask {
+	return ReceiveMask{bits: bits}
+}
+
 func (m ReceiveMask) Bits() uint32 {
 	return m.bits
 }
