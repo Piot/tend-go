@@ -29,8 +29,8 @@ package tend
 import "fmt"
 
 type DeliveryInfo struct {
-	SequenceID  SequenceID
-	WasReceived bool
+	SequenceID   SequenceID
+	WasDelivered bool
 }
 
 type OutgoingLogic struct {
@@ -54,8 +54,12 @@ type Header struct {
 	Mask       ReceiveMask
 }
 
+func NewOutgoingLogic() *OutgoingLogic {
+	return &OutgoingLogic{lastReceivedByRemote: NewSequenceID(MaxValue), outgoingSequenceID: NewSequenceID(MaxValue)}
+}
+
 func (l *OutgoingLogic) pushQueue(sequenceID SequenceID, wasReceived bool) {
-	l.receiveQueue = append(l.receiveQueue, DeliveryInfo{WasReceived: wasReceived, SequenceID: sequenceID})
+	l.receiveQueue = append(l.receiveQueue, DeliveryInfo{WasDelivered: wasReceived, SequenceID: sequenceID})
 }
 
 func (l *OutgoingLogic) popQueue() (DeliveryInfo, error) {
@@ -83,6 +87,7 @@ func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 	currentID = currentID.Next()
 
 	bits := NewMutableReceiveMask(header.Mask, distance)
+	fmt.Printf("Distance:%v", distance)
 	for i := 0; i < distance; i++ {
 		wasReceived, wasReceivedErr := bits.ReadNextBit()
 		if wasReceivedErr != nil {
@@ -92,7 +97,7 @@ func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 		currentID = currentID.Next()
 	}
 
-	l.lastReceivedByRemote = currentID
+	l.lastReceivedByRemote = nextID
 	return nil
 }
 
