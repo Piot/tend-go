@@ -87,7 +87,6 @@ func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 	currentID = currentID.Next()
 
 	bits := NewMutableReceiveMask(header.Mask, distance)
-	fmt.Printf("Distance:%v", distance)
 	for i := 0; i < distance; i++ {
 		wasReceived, wasReceivedErr := bits.ReadNextBit()
 		if wasReceivedErr != nil {
