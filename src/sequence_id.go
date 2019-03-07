@@ -48,6 +48,10 @@ func (s SequenceID) Next() SequenceID {
 	return SequenceID{value: nextValue}
 }
 
+func (s SequenceID) Equals(other SequenceID) bool {
+	return s.value == other.value
+}
+
 func IsValid(id uint8) bool {
 	return id < MaxRange
 }

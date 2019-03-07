@@ -78,8 +78,15 @@ func (l *OutgoingLogic) popQueue() (DeliveryInfo, error) {
 
 func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 	nextID := header.SequenceID
+	if l.lastReceivedByRemote.Equals(nextID) {
+		// This is perfectly normal. It can happen when remote is sending multiple packets without receiving any new ones in between.
+		// Or if we are sending at a slower rate
+		return nil
+	}
+
 	if !l.lastReceivedByRemote.IsValidSuccessor(nextID) {
-		return fmt.Errorf("unordered packets. Duplicates and old packets should be filtered in other layers")
+
+		return fmt.Errorf("outgoing. Unordered packets. Duplicates and old packets should be filtered in other layers. Last received %v and just received %v", l.lastReceivedByRemote, nextID)
 	}
 
 	distance := l.lastReceivedByRemote.Distance(nextID)

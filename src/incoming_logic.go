@@ -39,7 +39,7 @@ func NewIncomingLogic() *IncomingLogic {
 
 func (l *IncomingLogic) ReceivedToUs(nextID SequenceID) error {
 	if !l.lastReceivedToUs.IsValidSuccessor(nextID) {
-		return fmt.Errorf("Unordered packets. Duplicates and old packets should be filtered in other layers")
+		return fmt.Errorf("Incoming. Unordered packets. Duplicates and old packets should be filtered in other layers. Last received %v and just received %v.", l.lastReceivedToUs, nextID)
 	}
 
 	distance := l.lastReceivedToUs.Distance(nextID)
