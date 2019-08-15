@@ -39,6 +39,15 @@ type OutgoingLogic struct {
 	outgoingSequenceID   SequenceID
 }
 
+type OutgoingLogicDebugInfo struct {
+	LastReceivedByRemote SequenceID
+	OutgoingSequenceID   SequenceID
+}
+
+func (i OutgoingLogicDebugInfo) String() string {
+	return fmt.Sprintf("out: %v receivedByRemote: %v", i.OutgoingSequenceID, i.LastReceivedByRemote)
+}
+
 type ReceiveMask struct {
 	bits uint32
 }
@@ -76,6 +85,10 @@ func (l *OutgoingLogic) popQueue() (DeliveryInfo, error) {
 	return popped, nil
 }
 
+func (l *OutgoingLogic) DebugInfo() OutgoingLogicDebugInfo {
+	return OutgoingLogicDebugInfo{LastReceivedByRemote: l.lastReceivedByRemote, OutgoingSequenceID: l.outgoingSequenceID}
+}
+
 func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 	nextID := header.SequenceID
 	if l.lastReceivedByRemote.Equals(nextID) {
@@ -85,7 +98,6 @@ func (l *OutgoingLogic) ReceivedByRemote(header Header) error {
 	}
 
 	if !l.lastReceivedByRemote.IsValidSuccessor(nextID) {
-
 		return fmt.Errorf("outgoing. Unordered packets. Duplicates and old packets should be filtered in other layers. Last received %v and just received %v", l.lastReceivedByRemote, nextID)
 	}
 
