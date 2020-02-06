@@ -28,46 +28,15 @@ package tend
 
 import "fmt"
 
-type IncomingLogic struct {
+type PacketOutOfSequenceError struct {
 	lastReceivedToUs SequenceID
-	receiveMask      uint32
+	nextID           SequenceID
 }
 
-func NewIncomingLogic() *IncomingLogic {
-	return &IncomingLogic{lastReceivedToUs: NewSequenceID(MaxValue), receiveMask: 0}
+func NewPacketOutOfSequenceError(lastReceivedToUs SequenceID, nextID SequenceID) *PacketOutOfSequenceError {
+	return &PacketOutOfSequenceError{lastReceivedToUs: lastReceivedToUs, nextID: nextID}
 }
 
-func (l *IncomingLogic) ReceivedToUs(nextID SequenceID) error {
-	if !l.lastReceivedToUs.IsValidSuccessor(nextID) {
-		return NewPacketOutOfSequenceError(l.lastReceivedToUs, nextID)
-	}
-
-	distance := l.lastReceivedToUs.Distance(nextID)
-	if distance == 0 {
-		return fmt.Errorf("Distance should not be zero. Packet duplicates?")
-	}
-
-	if distance > ReceiveMaskRange {
-		return fmt.Errorf("too big gap in sequence")
-	}
-
-	for i := 0; i < distance-1; i++ {
-		l.appendReceived(false)
-	}
-	l.appendReceived(true)
-	l.lastReceivedToUs = nextID
-	return nil
-}
-
-func (l *IncomingLogic) appendReceived(wasReceived bool) {
-	l.receiveMask <<= 1
-	bits := uint32(0x0)
-	if wasReceived {
-		bits = uint32(0x01)
-	}
-	l.receiveMask |= bits
-}
-
-func (l *IncomingLogic) ReceivedHeader() Header {
-	return Header{SequenceID: l.lastReceivedToUs, Mask: ReceiveMask{bits: l.receiveMask}}
+func (e *PacketOutOfSequenceError) Error() string {
+	return fmt.Sprintf("Incoming. Unordered packets. Duplicates and old packets should be filtered in other layers. Last received %v and just received %v.", e.lastReceivedToUs, e.nextID)
 }
